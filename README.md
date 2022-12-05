@@ -1,7 +1,7 @@
 # PIPE
 ## Installation
 
-To run Pipeline, place pipeline folder in maya scripts editor and run (in python)
+To run Pipe, place pipeline folder in maya scripts editor and run (in python)
 
 
 	import pipeline
