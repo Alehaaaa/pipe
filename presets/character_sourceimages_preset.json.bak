@@ -1,0 +1,53 @@
+{
+    "branches": {
+        "assets": {
+            "blendshapes": {
+                "format": 2, 
+                "master_file_type": "mayaAscii", 
+                "version_file_type": "mayaAscii"
+            }, 
+            "model": {
+                "format": 2, 
+                "master_file_type": "mayaAscii", 
+                "version_file_type": "mayaAscii"
+            }, 
+            "rig": {
+                "format": 2, 
+                "master_file_type": "mayaAscii", 
+                "version_file_type": "mayaAscii"
+            }, 
+            "shading": {
+                "format": 2, 
+                "master_file_type": "mayaAscii", 
+                "version_file_type": "mayaAscii"
+            }
+        }, 
+        "sourceimages": {
+            "maps": {
+                "format": 0, 
+                "master_file_type": "mayaAscii", 
+                "version_file_type": "mayaAscii"
+            }
+        }
+    }, 
+    "categories": [
+        {
+            "from": 0, 
+            "name": "Characters", 
+            "padding": 0, 
+            "quantity": "Single folder", 
+            "step": 1, 
+            "to": 0, 
+            "trailing": 0
+        }, 
+        {
+            "from": 0, 
+            "name": "[ user input ]", 
+            "padding": 0, 
+            "quantity": "Single folder", 
+            "step": 1, 
+            "to": 0, 
+            "trailing": 0
+        }
+    ]
+}

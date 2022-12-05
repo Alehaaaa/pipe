@@ -1,0 +1,15 @@
+{
+      "categories": [
+            { "name": "Characters", "from": 0, "to": 0, "padding": 0, "quantity": "Single folder"},
+            { "name": "[ user input ]", "from": 0, "to": 0, "padding": 0, "quantity": "Single folder" }
+      ],
+
+      "branches": {
+            "assets": {
+                  "model": {"format": 2},
+                  "rig": {"format": 2},
+                  "blendshapes": {"format": 2},
+                  "shading": {"format": 2}
+            }
+      }
+}

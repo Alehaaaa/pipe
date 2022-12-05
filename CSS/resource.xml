@@ -1,0 +1,7 @@
+<RCC>
+  <qresource>
+    <file>//storage/renders/AutoConversion/Scripts/RenderLogger/CSS/checkbox.png</file>
+    <file alias="down_arrow.png">//storage/renders/AutoConversion/Scripts/RenderLogger/CSS/down_arrow.png</file>
+    <file>//storage/renders/AutoConversion/Scripts/RenderLogger/CSS/handle.png</file>
+  </qresource>
+</RCC>

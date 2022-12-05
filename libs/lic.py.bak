@@ -1,0 +1,192 @@
+# uncompyle6 version 3.5.0
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.5 (default, Nov 16 2020, 22:23:17) 
+# [GCC 4.8.5 20150623 (Red Hat 4.8.5-44)]
+# Embedded file name: /Users/liorbenhorin/Library/Preferences/Autodesk/maya/2017/scripts/pipeline/libs/lic.py
+# Compiled at: 2018-02-12 03:07:26
+"""
+
+PIPELINE 2
+
+Project manager for Maya
+
+Ahutor: Lior Ben Horin
+All rights reserved (c) 2017
+
+pipeline.nnl.tv
+liorbenhorin@gmail.com
+
+---------------------------------------------------------------------------------------------
+
+install:
+
+Place the pipeline folder in your maya scripts folder and run this code (in python):
+
+import pipeline
+pipeline.start()
+
+---------------------------------------------------------------------------------------------
+
+You are using pipeline on you own risk.
+Things can always go wrong, and under no circumstances the author
+would be responsible for any damages caused from the use of this software.
+When using this beta program you hereby agree to allow this program to collect
+and send usage data to the author.
+
+---------------------------------------------------------------------------------------------
+
+The coded instructions, statements, computer programs, and/or related
+material (collectively the "Data") in these files are subject to the terms
+and conditions defined by
+Creative Commons Attribution-NonCommercial-NoDerivs 4.0 Unported License:
+   http://creativecommons.org/licenses/by-nc-nd/4.0/
+   http://creativecommons.org/licenses/by-nc-nd/4.0/legalcode
+   http://creativecommons.org/licenses/by-nc-nd/4.0/legalcode.txt
+
+---------------------------------------------------------------------------------------------
+
+"""
+import logging, threading, os, pipeline.libs.requests as requests, pipeline.libs.appdirs as appdirs, pipeline.libs.files as files, pipeline.libs.serializer as serializer
+logger = logging.getLogger(__name__)
+
+class Metadata_file(object):
+
+    def __init__(self, **kwargs):
+        self.data_file = None
+        self.data_file_path = None
+        self.encrypted = False
+        for key in kwargs:
+            if key == 'path':
+                self.data_file_path = os.path.join(kwargs[key])
+            if key == 'encrypted':
+                self.encrypted = kwargs[key]
+
+        if self.data_file_path:
+            self.set_data_file(self.data_file_path)
+        return
+
+    def set_data_file(self, path):
+        if os.path.isfile(path):
+            self.data_file = serializer.JSONSerializer(path=path, encrypted=self.encrypted)
+            return True
+
+
+class License_node(Metadata_file):
+
+    def __init__(self, **kwargs):
+        Metadata_file.__init__(self, **kwargs)
+        self.version = None
+        for key in kwargs:
+            if key == 'version':
+                self.version = kwargs[key]
+
+        self.author = 'NNL'
+        self.app = ('pipeline{}').format(self.version[0]) if self.version else 'pipeline'
+        self.lic_dir = appdirs.user_data_dir(appauthor=self.author, appname=self.app)
+        self.lic_file = os.path.join(self.lic_dir, 'lic')
+        if os.path.isfile(self.lic_file):
+            self.data_file_path = self.lic_file
+            self.set_data_file(self.data_file_path)
+        self.license_file = None
+        if self.data_file:
+            self.license_file = self.data_file.read()
+        return
+
+    @staticmethod
+    def check_lic(version):
+        try:
+            lic = License_node(version=version, encrypted=True)
+            if lic.license_file:
+                if lic.license_file['node'] == License_node.hashed_node():
+                    return True
+            else:
+                return False
+        except Exception as err:
+            return False
+
+    def create(self, key=None, email=None, name=None, id=None):
+        settings_data = {}
+        settings_data['version'] = self.version
+        settings_data['key'] = key
+        settings_data['email'] = email
+        settings_data['name'] = name
+        settings_data['id'] = id
+        settings_data['node'] = License_node.hashed_node()
+        files.assure_folder_exists(os.path.dirname(self.lic_file))
+        self.data_file = serializer.JSONSerializer(encrypted=True).create(self.lic_file, settings_data)
+        self.license_file = self.data_file.read()
+        return self
+
+    @staticmethod
+    def node_name():
+        from uuid import getnode as get_mac
+        mac = get_mac()
+        as_hex = hex(mac)
+        return as_hex
+
+    @staticmethod
+    def hash_me(string):
+        import hashlib
+        hashed = hashlib.sha224(string).hexdigest()
+        return hashed
+
+    @staticmethod
+    def hashed_node():
+        return License_node.hash_me(License_node.node_name())
+
+
+class License_Verify(object):
+    NO_CONNECTION = 'There is no internet connection'
+    NO_RESPOSE = 'No respone from gumroad servers, please try again later.'
+    FAIL = 'Oh snap! This key is invalid'
+    SUCCESS = 'Thank you for the support in Pipeline!'
+    result_no_connection = 0
+    result_no_response = 1
+    result_fail = 2
+    result_success = 3
+
+    def __init__(self):
+        self.response_massage = License_Verify.NO_CONNECTION
+        self.results = License_Verify.result_no_connection
+        self.respose = None
+        return
+
+    def online_verify_key(self, key):
+        """1353972E-3BD348D2-A0E33693-AF107C9D"""
+        payload = {'product_permalink': 'pipeline2'}
+        payload['license_key'] = key
+        try:
+            response = requests.post('https://api.gumroad.com/v2/licenses/verify', params=payload, timeout=1.5)
+            if response.status_code == 200:
+                self.respose = response.json()
+                if not self.respose['purchase']['refunded']:
+                    self.results = License_Verify.result_success
+                    self.response_massage = License_Verify.SUCCESS
+                    return
+            self.results = License_Verify.result_fail
+            self.response_massage = License_Verify.FAIL
+            return
+        except (requests.ConnectionError, requests.HTTPError, requests.Timeout):
+            self.results = License_Verify.result_no_connection
+            self.response_massage = License_Verify.NO_CONNECTION
+            return
+
+
+class License_check_thread(threading.Thread):
+
+    def __init__(self, key=None):
+        threading.Thread.__init__(self)
+        self.key = key
+        self.result = None
+        self.response = None
+        self.query = License_Verify()
+        return
+
+    def run(self):
+        try:
+            self.query.online_verify_key(self.key)
+            self.result = self.query.results
+            self.response = self.query.respose
+            logger.info(self.query.response_massage)
+        except Exception as err:
+            logger.info(err)

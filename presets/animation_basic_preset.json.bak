@@ -1,0 +1,17 @@
+{
+      "categories" : [
+            {"name": "SEQ", "from": "[ user input ]", "to": "[ user input ]", "padding": 3, "quantity": "Multipe folders"},
+            {"name": "SHOT", "from": "[ user input ]", "to": "[ user input ]", "padding": 3, "quantity": "Multipe folders"}
+      ],
+
+      "branches" : {
+            "render": {
+                  "lighting":{"format":2}
+            },
+            "animation": {
+                  "layout": {"format": 2},
+                  "anim": {"format": 2}
+            }
+
+      }
+}
