@@ -22,7 +22,7 @@ def download(downloadUrl, saveFile):
         return
     
     
-    fileSize        = int(''.join(response.info().getheaders("Content-Length")))
+    fileSize        = int(response.info().getheaders("Content-Length")[0])
     fileSizeDl      = 0
     blockSize       = 128
     output          = open(saveFile,'wb')    
