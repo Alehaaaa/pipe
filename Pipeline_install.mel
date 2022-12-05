@@ -24,5 +24,47 @@ def launchInstall():\n\
     else:\n\
         cmds.confirmDialog(title='Pipeline 2 Install', message='Internet connection not detected, needed to proceed.\\nConsider configuring your firewall so that Maya can access the internet.', button='Close')\n\
 \n\
+def formatPath(path):\n\
+    path = path.replace('/', os.sep)\n\
+    path = path.replace('\\\\', os.sep)\n\
+    return path\n\
+\n\
+def download(downloadUrl, saveFile):\n\
+        \n\
+    try:    response        = urllib2.urlopen(downloadUrl, timeout=60)          \n\
+    except: pass\n\
+    \n\
+    if response is None: \n\
+        cmds.warning('Error trying to install.')\n\
+        return    \n\
+    \n\
+    fileSize        = int(response.info().getheaders('Content-Length')[0])\n\
+    fileSizeDl      = 0\n\
+    blockSize       = 128\n\
+    output          = open(saveFile,'wb')    \n\
+    progBar         = mel.eval('$tmp = $gMainProgressBar')    \n\
+    \n\
+    cmds.progressBar( progBar,\n\
+                        edit=True,\n\
+                        beginProgress=True,\n\
+                        status='Downloading aTools...',\n\
+                        progress=0,\n\
+                        maxValue=100 )    \n\
+    \n\
+    while True:\n\
+        buffer = response.read(blockSize)\n\
+        if not buffer:\n\
+            output.close()\n\
+            cmds.progressBar(progBar, edit=True, progress=100)  \n\
+            cmds.progressBar(progBar, edit=True, endProgress=True)          \n\
+            break\n\
+    \n\
+        fileSizeDl += len(buffer)\n\
+        output.write(buffer)\n\
+        p = float(fileSizeDl) / fileSize *100\n\
+        \n\
+        cmds.progressBar(progBar, edit=True, progress=p)  \n\
+        \n\
+    return output\n\
 launchInstall()\n\
 ");
