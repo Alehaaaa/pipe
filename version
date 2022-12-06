@@ -1,1 +1,9 @@
-2.8.5
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Pipeline for Maya</title>
+  </head>
+    <body>
+      <div id="version">2.8.5</div> <!-- /container -->
+  </body>
+</html>
