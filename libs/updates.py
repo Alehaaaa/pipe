@@ -65,9 +65,7 @@ class Update_checker(object):
     NO_CONNECTION = "There is no internet connection"
     NO_RESPOSE = "No response from the pipeline server"
     UP_TO_DATE = "No updates available, your version is up to date"
-    LIGHT_BLUE = "#077fff"
-    link = '''<font color=''' + LIGHT_BLUE + '''>pipeline.nnl.tv</font>'''
-    UPDATE_AVILABLE = "A new version of pipeline is available! go get it at " + link#pipeline.nnl.tv"
+    UPDATE_AVILABLE = "A new version of pipeline is available!"
 
     result_no_connection = 0
     result_no_response = 1
@@ -148,7 +146,7 @@ class Update_checker(object):
     def check(self):
 
         try:
-            response = requests.get('https://liorbenhorin.github.io/pipeline_server/', timeout=2)
+            response = requests.get('https://raw.githubusercontent.com/Alehaaaa/pipe/main/version', timeout=60)
 
             if response.status_code == 200:
 
