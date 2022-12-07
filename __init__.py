@@ -52,7 +52,7 @@ import pipeline.libs.updates as updates
 import pipeline.maya_libs.maya_gui as maya_gui
 
 
-__version__ = (2,8,5)
+__version__ = (2,8,6)
 __author__ = 'Lior Ben Horin'
 
 
