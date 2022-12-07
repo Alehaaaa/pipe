@@ -20,6 +20,8 @@ def launchInstall():\n\
     if hasInternet(INSTALL_URL):\n\
         try: PipelineInstall = urllib2.urlopen(INSTALL_URL, timeout=60).read()\n\
         except IOError: pass\n\
+    else:\n\
+        cmds.warning('Could not access the installation script.')\n\
     if PipelineInstall: exec(PipelineInstall)\n\
     else:\n\
         cmds.confirmDialog(title='Pipeline 2 Install', message='Internet connection not detected, needed to proceed.\\nConsider configuring your firewall so that Maya can access the internet.', button='Close')\n\
@@ -31,14 +33,17 @@ def formatPath(path):\n\
 \n\
 def download(downloadUrl, saveFile):\n\
         \n\
-    try:    response        = urllib2.urlopen(downloadUrl, timeout=60)          \n\
+    try:    response        = urllib2.urlopen(downloadUrl)          \n\
     except: pass\n\
     \n\
     if response is None: \n\
         cmds.warning('Error trying to install.')\n\
         return    \n\
     \n\
-    fileSize        = int(''.join(response.info().getheaders('Content-Length')[0]))\n\
+    try: fileSize = int(urllib2.urlopen(downloadUrl).info().getheaders('Content-Length')[0])\n\
+    except:\n\
+    fileSize = 1500285\n\
+    print urllib2.urlopen(downloadUrl).info()\n\
     fileSizeDl      = 0\n\
     blockSize       = 128\n\
     output          = open(saveFile,'wb')    \n\
@@ -68,5 +73,14 @@ def download(downloadUrl, saveFile):\n\
     return output\n\
 launchInstall()\n\
 \n\
-cmds.shelfButton(parent=cmds.tabLayout(mel.eval('$nul=$gShelfTopLevel'),q=1,st=1),i=os.path.join(os.environ['MAYA_APP_DIR'],cmds.about(version=True),'scripts','pipeline','pipeline_logo32.svg'),c='import pipeline;pipeline.start()',annotation='Pipeline 2')\n\
+currentShelf = cmds.tabLayout(mel.eval('$nul=$gShelfTopLevel'),q=1,st=1)\n\
+def find():\n\
+    buttons = [b for b in cmds.shelfLayout(currentShelf, q=True, ca=True) if 'separator' not in b]\n\
+    for b in buttons:\n\
+        if cmds.shelfButton(b, q=True, l=True) == 'pipeline':\n\
+            return True\n\
+            break\n\
+\n\
+if not find():\n\
+    cmds.shelfButton(parent=currentShelf,i=os.path.join(os.environ['MAYA_APP_DIR'],cmds.about(version=True),'scripts','pipeline','pipeline_logo32.svg'),label='pipeline',c='import pipeline;pipeline.start()',annotation='Pipeline 2')\n\
 ");
