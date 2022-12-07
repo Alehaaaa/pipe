@@ -42,8 +42,8 @@ def download(downloadUrl, saveFile):\n\
     \n\
     try: fileSize = int(urllib2.urlopen(downloadUrl).info().getheaders('Content-Length')[0])\n\
     except:\n\
-    fileSize = 1500285\n\
-    print urllib2.urlopen(downloadUrl).info()\n\
+        fileSize = 1500285\n\
+        print urllib2.urlopen(downloadUrl).info()\n\
     fileSizeDl      = 0\n\
     blockSize       = 128\n\
     output          = open(saveFile,'wb')    \n\
