@@ -127,15 +127,10 @@ def open_scene(path=None):
                 newName = str( newName )
                 try:
                     projectPath = json.load(open(os.path.join(os.environ['MAYA_APP_DIR'],cmds.about(v=True),'prefs','pipeline2_settings.json')))['projects'][0]
-                    paths = ['assets','scenes','tests']
-                    for i in paths:
+                    for i in os.listdir(projectPath):
                         if i in newName:
-                            print newName
-                            newName = newName.split(i)[-1].replace('/',os.sep)
-                            print projectPath
-                            print newName
-                            newName = projectPath+os.sep+i+newName
-                            print newName
+                            path = newName.split(i)[-1].replace('/',os.sep)
+                            newName = projectPath+os.sep+i+path
                             break
                 except:
                     cmds.error( "Errors while changing reference locations" )
@@ -208,10 +203,9 @@ def reference_scene(path=None):
     if os.path.exists(path):
         namesspace = files.file_name_no_extension(files.file_name(path))
         projectPath = json.load(open(os.path.join(os.environ['MAYA_APP_DIR'],cmds.about(v=True),'prefs','pipeline2_settings.json')))['projects'][0]
-        paths = ['assets','scenes','tests']
-        for i in paths:
+        for i in os.listdir(projectPath):
             if i in path:
-                path = newName.split(i)[-1].replace('/',os.sep)
+                newName = path.split(i)[-1].replace('/',os.sep)
                 path = projectPath+os.sep+i+newName
                 break
         return os.path.normpath(cmds.file(path, r=True, f=True, ns=namesspace, esn=False))
