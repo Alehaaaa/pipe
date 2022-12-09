@@ -20,8 +20,6 @@ def launchInstall():\n\
     if hasInternet(INSTALL_URL):\n\
         try: PipelineInstall = urllib2.urlopen(INSTALL_URL, timeout=60).read()\n\
         except IOError: pass\n\
-    else:\n\
-        cmds.warning('Could not access the installation script.')\n\
     if PipelineInstall: exec(PipelineInstall)\n\
     else:\n\
         cmds.confirmDialog(title='Pipeline 2 Install', message='Internet connection not detected, needed to proceed.\\nConsider configuring your firewall so that Maya can access the internet.', button='Close')\n\
@@ -32,44 +30,46 @@ def formatPath(path):\n\
     return path\n\
 \n\
 def download(downloadUrl, saveFile):\n\
-        \n\
-    try:    response        = urllib2.urlopen(downloadUrl)          \n\
+\n\
+    try:    response        = urllib2.urlopen(downloadUrl, timeout=60)          \n\
     except: pass\n\
     \n\
     if response is None: \n\
         cmds.warning('Error trying to install.')\n\
         return    \n\
     \n\
-    try: fileSize = int(urllib2.urlopen(downloadUrl).info().getheaders('Content-Length')[0])\n\
+    try:\n\
+        fileSize        = int(response.info().getheaders('Content-Length')[0])\n\
+        fileSizeDl      = 0\n\
+        blockSize       = 128\n\
+        output          = open(saveFile,'wb')    \n\
+        progBar         = mel.eval('$tmp = $gMainProgressBar')    \n\
+        \n\
+        cmds.progressBar( progBar,\n\
+                            edit=True,\n\
+                            beginProgress=True,\n\
+                            status='Downloading Pipeline...',\n\
+                            progress=0,\n\
+                            maxValue=100 )    \n\
+        \n\
+        while True:\n\
+            buffer = response.read(blockSize)\n\
+            if not buffer:\n\
+                output.close()\n\
+                cmds.progressBar(progBar, edit=True, progress=100)  \n\
+                cmds.progressBar(progBar, edit=True, endProgress=True)          \n\
+                break\n\
+        \n\
+            fileSizeDl += len(buffer)\n\
+            output.write(buffer)\n\
+            p = float(fileSizeDl) / fileSize *100\n\
+            \n\
+            cmds.progressBar(progBar, edit=True, progress=p)  \n\
+            \n\
     except:\n\
-        fileSize = 1500285\n\
-        print urllib2.urlopen(downloadUrl).info()\n\
-    fileSizeDl      = 0\n\
-    blockSize       = 128\n\
-    output          = open(saveFile,'wb')    \n\
-    progBar         = mel.eval('$tmp = $gMainProgressBar')    \n\
-    \n\
-    cmds.progressBar( progBar,\n\
-                        edit=True,\n\
-                        beginProgress=True,\n\
-                        status='Downloading Pipeline...',\n\
-                        progress=0,\n\
-                        maxValue=100 )    \n\
-    \n\
-    while True:\n\
-        buffer = response.read(blockSize)\n\
-        if not buffer:\n\
-            output.close()\n\
-            cmds.progressBar(progBar, edit=True, progress=100)  \n\
-            cmds.progressBar(progBar, edit=True, endProgress=True)          \n\
-            break\n\
-    \n\
-        fileSizeDl += len(buffer)\n\
-        output.write(buffer)\n\
-        p = float(fileSizeDl) / fileSize *100\n\
-        \n\
-        cmds.progressBar(progBar, edit=True, progress=p)  \n\
-        \n\
+        output = open(saveFile,'wb')\n\
+        output.write(response.read())\n\
+        output.close()\n\
     return output\n\
 launchInstall()\n\
 \n\
