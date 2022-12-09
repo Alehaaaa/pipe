@@ -86,8 +86,8 @@ def PipelineInstall():
         
     #delete temp
     zfobj.close()
-    pipe = formatPath("%s%s%s"%(PipelinePath, os.sep, 'pipe-latest'))
-    if os.path.exists(pipe): os.rename(pipe, pipe.replace('pipe-latest','pipeline'))
+    pipe = formatPath("%s%s%s"%(PipelinePath, os.sep, 'pipe-'+latest))
+    if os.path.exists(pipe): os.rename(pipe, pipe.replace('pipe-'+latest,'pipeline'))
     if os.path.isfile(tmpZipFile):     os.remove(tmpZipFile)
     
     import pipeline
