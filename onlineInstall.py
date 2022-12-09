@@ -58,8 +58,9 @@ def PipelineInstall():
     mayaAppDir      = mel.eval('getenv MAYA_APP_DIR')    
     PipelinePath    = mayaAppDir + os.sep + cmds.about(v=True) + os.sep + "scripts"
     PipelineFolder  = PipelinePath + os.sep + "pipeline" + os.sep
-    tmpZipFile      = "%s%stmp.zip"%(PipelinePath, os.sep)    
-    DOWNLOAD_URL    = "https://github.com/Alehaaaa/pipe/archive/refs/tags/latest.zip"
+    tmpZipFile      = "%s%stmp.zip"%(PipelinePath, os.sep)
+    latest = urllib2.urlopen("https://github.com/Alehaaaa/pipe/releases/latest").url.split('/')[-1]
+    DOWNLOAD_URL    = "https://github.com/Alehaaaa/pipe/archive/refs/tags/"+latest+".zip"
         
     #delete temp
     if os.path.isfile(tmpZipFile):     os.remove(tmpZipFile)   
