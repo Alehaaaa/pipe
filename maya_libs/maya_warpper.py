@@ -127,12 +127,9 @@ def open_scene(path=None):
                 newName = str( newName )
                 try:
                     projectPath = json.load(open(os.path.join(os.environ['MAYA_APP_DIR'],cmds.about(v=True),'prefs','pipeline2_settings.json')))['projects'][0]
-                    newName = newName.replace('/',os.sep)
-                    newName = os.path.join(projectPath,[newName.split(n)[1] for n in [os.sep + 'TMH' + os.sep,os.sep + 'TMH_PRODUCTION' + os.sep] if n in newName][0])
+                    newName = projectPath+os.sep+'assets'+newName.split('assets')[-1].replace('/',os.sep) if 'assets' in newName else newName
                 except:
                     cmds.error( "Errors while changing reference locations" )
-                newName = newName.replace("\\","/")
-                print ( newName )
                 fileObject.setRawFullName( newName )
                 OpenMaya.MScriptUtil.setBool( retCode, True )
 	
@@ -202,8 +199,7 @@ def reference_scene(path=None):
     if os.path.exists(path):
         namesspace = files.file_name_no_extension(files.file_name(path))
         projectPath = json.load(open(os.path.join(os.environ['MAYA_APP_DIR'],cmds.about(v=True),'prefs','pipeline2_settings.json')))['projects'][0]
-        path = path.replace('/',os.sep)
-        path = os.path.join(projectPath,[path.split(n)[1] for n in [os.sep + 'TMH' + os.sep,os.sep + 'TMH_PRODUCTION' + os.sep] if n in path][0])
+        path = projectPath+os.sep+'assets'+path.split('assets')[-1].replace('/',os.sep) if 'assets' in path else path
         return os.path.normpath(cmds.file(path, r=True, f=True, ns=namesspace, esn=False))
 
 
