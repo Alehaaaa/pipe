@@ -205,8 +205,8 @@ def reference_scene(path=None):
         projectPath = json.load(open(os.path.join(os.environ['MAYA_APP_DIR'],cmds.about(v=True),'prefs','pipeline2_settings.json')))['projects'][0]
         for i in os.listdir(projectPath):
             if i in path:
-                newName = path.split(i)[-1].replace('/',os.sep)
-                path = projectPath+os.sep+i+newName
+                oldName = path.split(i)[-1].replace('/',os.sep)
+                path = projectPath+os.sep+i+oldName
                 break
         return os.path.normpath(cmds.file(path, r=True, f=True, ns=namesspace, esn=False))
 
