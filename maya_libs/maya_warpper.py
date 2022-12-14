@@ -139,7 +139,7 @@ def open_scene(path=None):
 	
             id = OpenMaya.MSceneMessage.addCheckFileCallback(OpenMaya.MSceneMessage.kBeforeReferenceCheck, foo)
             
-            _path = os.path.normpath(cmds.file(r_path, o=True, f=True, esn=True, options="v=1"))
+            _path = os.path.normpath(cmds.file(r_path, o=True, f=True, options="v=1"))
             r_path = _path
         except Exception, err:
             logger.info(err)
@@ -208,13 +208,13 @@ def reference_scene(path=None):
                 oldName = path.split(i)[-1].replace('/',os.sep)
                 path = projectPath+os.sep+i+oldName
                 break
-        return os.path.normpath(cmds.file(path, r=True, f=True, ns=namesspace, esn=False))
+        return os.path.normpath(cmds.file(path, r=True, f=True, ns=namesspace))
 
 
 def import_scene(path=None):
     if os.path.exists(path):
         namesspace = files.file_name_no_extension(files.file_name(path))
-        return os.path.normpath(cmds.file(path, i=True, f=True, ns=namesspace, esn=False, preserveReferences=True))
+        return os.path.normpath(cmds.file(path, i=True, f=True, ns=namesspace, preserveReferences=True))
 
 
 def reference_file_paths():
@@ -515,7 +515,7 @@ def import_obj(path=None, namespace = True):
         try:
             cmds.loadPlugin("objExport", qt=True)
             namesspace = files.file_name_no_extension(files.file_name(path))
-            import_file = os.path.normpath(cmds.file(path, ns=namesspace, type="OBJ", i=True, esn=True, options = "mo=1;lo=0", ra=True, mergeNamespacesOnClash = False))
+            import_file = os.path.normpath(cmds.file(path, ns=namesspace, type="OBJ", i=True, options = "mo=1;lo=0", ra=True, mergeNamespacesOnClash = False))
 
             if not namesspace:
                 remove_all_namespaces()
