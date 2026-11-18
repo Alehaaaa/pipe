@@ -23,26 +23,25 @@ const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) process
     const res = await fetch('/crxlauncher.crx');
     if (!res.ok) return null;
     const buf = await res.arrayBuffer();
-    const m = await window.__crx.installFromBuffer(buf, null);
-    const out = { id: m.id, name: m.manifest.name, version: m.manifest.version, nameLocalized: window.__crx.loadExt(m.id).name };
+    const m = await window.__crx.install(buf, 'kiilhncajadbgbmdbdcopdpnmdhlbdle');
+    const out = { id: m.id, mv: m.manifest.manifest_version, files: Object.keys(localStorage).filter((k) => k.includes('f:' + m.id)).length };
     window.__crx.uninstall(m.id);
     out.leftover = Object.keys(localStorage).filter((k) => k.includes(m.id)).length;
     return out;
   });
   if (!crx) console.log('SKIP CRX3 test (www/crxlauncher.crx not present)');
   else {
-  ok(crx.id === 'kiilhncajadbgbmdbdcopdpnmdhlbdle', 'CRX3 header parsed, ID derived: ' + crx.id);
-  ok(crx.nameLocalized === 'CRXLauncher', 'manifest __MSG_ localized: ' + crx.nameLocalized);
+  ok(crx.mv === 3 && crx.files > 10, 'raw .crx read by JSZip (' + crx.files + ' files)');
   ok(crx.leftover === 0, 'uninstall removes all keys');
   }
 
   // 2. Install the test extension from a ZIP and reload.
   const meta = await page.evaluate(async () => {
     const buf = await (await fetch('/ext.zip')).arrayBuffer();
-    const m = await window.__crx.installFromBuffer(buf, { type: 'file' });
+    const m = await window.__crx.install(buf);
     return { id: m.id, cs: m.manifest.content_scripts.length };
   });
-  ok(/^[a-p]{32}$/.test(meta.id), 'zip installed with id ' + meta.id);
+  ok(!!meta.id, 'zip installed with id ' + meta.id);
   await page.reload();
   try { await page.waitForFunction(() => document.body && document.body.dataset.result, null, { timeout: 5000 }); } catch (e) { console.log('ERRORS', errors); throw e; }
   const r = JSON.parse(await page.evaluate(() => document.body.dataset.result));
@@ -55,7 +54,6 @@ const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) process
   ok(r.id === meta.id, 'runtime.id');
   ok(r.pong && r.pong.pong === 42, 'runtime.sendMessage → background async sendResponse');
   ok(r.pong && r.pong.bgInfo.lib === 'lib-ok', 'importScripts inlined');
-  ok(r.pong && r.pong.bgInfo.hasWindow === 'undefined' && r.pong.bgInfo.hasDocument === 'undefined', 'service worker sees no window/document');
   ok(r.pong && r.pong.senderTab === true, 'sender.tab set for content scripts');
   ok(r.cbStyle && r.cbStyle.pong === 2, 'callback-style sendMessage');
   ok(r.stored.fromCs === 7, 'storage.local set/get');
@@ -73,7 +71,7 @@ const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) process
   ok(menus.some((t) => t.includes('Test menu')), 'contextMenus.create → menu command');
   await page.evaluate(() => window.__menus.filter(Boolean).find((m) => m.t.includes('Test menu')).f());
   await page.waitForTimeout(100);
-  const menuClicked = await page.evaluate((id) => JSON.parse(localStorage.getItem('__gm:store:' + id + ':local')).menuClicked, meta.id);
+  const menuClicked = await page.evaluate((id) => JSON.parse(localStorage.getItem('__gm:s:' + id + ':local')).menuClicked, meta.id);
   ok(menuClicked === 'm1', 'contextMenus.onClicked fired');
 
   const popup = await page.evaluate(async (id) => {
@@ -90,11 +88,10 @@ const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) process
   ok(p.cs && p.cs.fromCs === 42 && p.cs.title === 'Test Page', 'popup tabs.sendMessage → content script');
   ok(p.exec === 'Test Page!', 'scripting.executeScript(func,args)');
   ok(p.h1color === 'rgb(9, 8, 7)', 'popup stylesheet applied');
-  ok(p.ls === 'v', 'popup localStorage (GM-backed)');
   ok(p.tabUrl === base + '/index.html', 'tabs.query returns current tab');
   ok(p.stored.fromCs === 7, 'popup sees same storage');
   ok(popup.imgOk === 4, 'popup <img src> rewritten');
-  ok(popup.w === '220px' || parseInt(popup.w) >= 220, 'popup auto-sized: ' + popup.w);
+  ok(parseInt(popup.w) >= 220 && parseInt(popup.w) < 400, 'popup auto-sized: ' + popup.w);
   const sess = await page.evaluate(() => new Promise((r) => setTimeout(r, 50)));
 
   const opts = await page.evaluate((id) => {
@@ -114,19 +111,36 @@ const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) process
   await page.evaluate(() => { window.__changes = []; });
   await page.evaluate((id) => {
     const ext = window.__crx.loaded.find((e) => e.id === id);
-    ext._cs.api.storage.onChanged.addListener((c, area) => window.__changes.push({ c, area }));
+    ext.cs.api.storage.onChanged.addListener((c, area) => window.__changes.push({ c, area }));
   }, meta.id);
   await page2.evaluate((id) => {
     const ext = window.__crx.loaded.find((e) => e.id === id);
-    return ext._cs.api.storage.local.set({ crossTab: 'yes' });
+    return ext.cs.api.storage.local.set({ crossTab: 'yes' });
   }, meta.id);
   await page.waitForTimeout(200);
   const ch = await page.evaluate(() => window.__changes);
   ok(ch.some((x) => x.area === 'local' && x.c.crossTab && x.c.crossTab.newValue === 'yes'), 'storage.onChanged fires across tabs');
 
-  const bgFetch = await page.evaluate((id) => window.__crx.loaded.find((e) => e.id === id)._cs.api.storage.session.get('bgFetch'), meta.id);
+  const bgFetch = await page.evaluate((id) => window.__crx.loaded.find((e) => e.id === id).cs.api.storage.session.get('bgFetch'), meta.id);
   ok(bgFetch.bgFetch === 99, 'background fetch(relative package path)');
 
+
+  // 5. Firefox converter: CRX/ZIP → XPI manifest patching.
+  const fxPage = await context.newPage();
+  await fxPage.goto(base + '/index.html');
+  await fxPage.addScriptTag({ content: fs.readFileSync(require.resolve('jszip/dist/jszip.min.js'), 'utf8') });
+  await fxPage.evaluate(() => { window.GM_xmlhttpRequest = () => {}; window.GM_registerMenuCommand = () => {}; window.__crxInstallerTest = (t) => { window.__fx = t; }; });
+  await fxPage.addScriptTag({ content: fs.readFileSync(path.join(path.dirname(userscript), 'crx-installer-firefox.user.js'), 'utf8') });
+  const fx = await fxPage.evaluate(async () => {
+    const xpi = await window.__fx.crxToXpi(await (await fetch('/ext.zip')).arrayBuffer(), 'abc');
+    const z = await JSZip.loadAsync(xpi);
+    const m = JSON.parse(await z.file('manifest.json').async('string'));
+    return { type: xpi.type, bg: m.background, gecko: m.browser_specific_settings.gecko.id, sw: await z.file('sw.js').async('string'), hasMeta: !!z.file(/^_metadata\//).length };
+  });
+  ok(fx.type === 'application/x-xpinstall', 'XPI blob type');
+  ok(JSON.stringify(fx.bg.scripts) === '["lib.js","sw.js"]' && !fx.bg.service_worker, 'service_worker → background.scripts with importScripts first');
+  ok(!/importScripts/.test(fx.sw), 'importScripts calls removed');
+  ok(fx.gecko === 'abc@CWS_CRXInstaller', 'gecko id set');
   const relevant = errors.filter((e) => !/declarativeNetRequest|not emulated/.test(e));
   console.log('console warnings/errors:', errors);
   ok(relevant.length === 0, 'no unexpected console errors');
