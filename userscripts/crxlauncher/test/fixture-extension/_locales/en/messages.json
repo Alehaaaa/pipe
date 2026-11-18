@@ -1,0 +1,3 @@
+{ "appName": {"message": "Test Ext"},
+  "greet": {"message": "Hello $who$! ($1)", "placeholders": {"who": {"content": "$1"}}},
+  "color": {"message": "rgb(1, 2, 3)"} }

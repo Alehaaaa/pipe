@@ -1,0 +1,16 @@
+{
+  // comments are allowed in manifests
+  "manifest_version": 3,
+  "name": "__MSG_appName__",
+  "version": "1.2.3",
+  "default_locale": "en",
+  "icons": { "16": "icon.png", "48": "icon.png" },
+  "permissions": ["storage", "alarms", "contextMenus", "declarativeNetRequest"],
+  "background": { "service_worker": "sw.js" },
+  "action": { "default_popup": "popup.html" },
+  "options_page": "options.html",
+  "content_scripts": [
+    { "matches": ["http://localhost/*"], "js": ["a.js"], "run_at": "document_start" },
+    { "matches": ["*://*/*"], "exclude_matches": ["*://*/excluded*"], "js": ["b.js"], "css": ["style.css"] }
+  ]
+}
